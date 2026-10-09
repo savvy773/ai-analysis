@@ -17,26 +17,26 @@ LiveBench는 주로 max/xhigh 설정만 측정해서, 나머지 설정은 Agenti
 
 필요한 것: [uv](https://docs.astral.sh/uv/), 인터넷.
 
+`run.py`를 더블클릭하거나 `ai-analysis`를 실행하면 루트의 `report.html`을 최신 데이터로 다시 만들고 브라우저로 연다.
+
 ```bash
-ai-analysis                         # 대화형 화면 (TUI)
-ai-analysis --maker claude          # 제조사 탭을 골라 시작
-ai-analysis --print --top 10        # 표만 출력
-ai-analysis --markdown --sort agentic
-ai-analysis --web                   # 프로젝트 루트에 report.html을 만들고 브라우저로 열기
-ai-analysis --refresh               # 캐시 무시하고 새로 받기
+ai-analysis                               # report.html 갱신 후 브라우저로 열기
+ai-analysis --maker claude --sort tb      # 브라우저에서 처음 보일 탭과 정렬
+ai-analysis --refresh                     # 캐시 무시하고 데이터 새로 받기
+ai-analysis --out 경로.html               # 다른 위치에 저장 (브라우저는 열지 않음)
+ai-analysis --print --top 10              # 브라우저 대신 터미널에 표 출력
+ai-analysis --markdown --sort agentic     # 마크다운 표 출력
 ```
 
-TUI 키
+브라우저 화면
 
-| 키 | 동작 |
+| 조작 | 동작 |
 |---|---|
-| `1`–`5` | 제조사: All · Claude · OpenAI · Google · Other |
-| `c` `t` `s` `b` `g` | 정렬: Cost · Time · Score · Terminal · Agentic (같은 키 다시 → 역순) |
-| `+` `-` / `a` | 표시 개수 ±5 / 점수 상위 20 ↔ 전체 |
-| `/`, `Esc` | 모델명 검색(정규식), 검색 지우기 |
-| `m` | 현재 표를 마크다운으로 클립보드 복사 |
-| `w` | HTML 리포트를 브라우저로 열기 |
-| `r` / `q` | 새로고침 / 종료 |
+| 상단 탭 | 제조사: All · Claude · OpenAI · Google · Other |
+| Top 선택 | 점수 상위 10 / 20 / 40 / 전체 |
+| 검색창 | 모델명 검색(정규식, 예: `opus\|sol`) |
+| 열 제목 클릭 | 그 열로 정렬, 다시 클릭하면 역순 |
+| 행 클릭 | 아래에 가격·속도·컨텍스트 등 상세 |
 
 - `ai-analysis` 명령 설치: 프로젝트 폴더에서 `uv tool install --editable .` 한 번. 설치 없이 `uv run run.py`도 같다.
 - Windows: 루트의 `run.py` 더블클릭으로도 실행된다.

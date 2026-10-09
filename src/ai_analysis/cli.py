@@ -1,4 +1,4 @@
-"""명령행 진입점: 옵션을 읽고 TUI · 표 · 마크다운 · HTML 중 하나로 보여 준다."""
+"""명령행 진입점: 기본은 HTML 리포트를 갱신해 브라우저로 열고, --print/--markdown이면 터미널에 표를 출력한다."""
 import argparse
 import sys
 
@@ -11,8 +11,8 @@ from . import style as st
 
 USAGE = """Artificial Analysis · LiveBench 데이터로 AI 모델의 비용·시간·코딩 성능을 비교한다.
 
-  ai-analysis                        # 터미널 대화형 화면 (TUI)
-  ai-analysis --web                  # 프로젝트 루트에 report.html을 만들고 브라우저로 연다
+  ai-analysis                        # 루트의 report.html을 갱신하고 브라우저로 연다
+  ai-analysis --maker claude --sort tb   # 브라우저에서 처음 보일 탭과 정렬
   ai-analysis --print --maker google --top 10
   ai-analysis --markdown --sort tb
 """
@@ -71,7 +71,8 @@ def open_report(args) -> int:
     except (OSError, ValueError) as e:
         print(f"불러오지 못했습니다: {e}", file=sys.stderr)
         return 1
-    path = web.write(Path(args.out).resolve() if args.out else web.REPORT_PATH, models, fetched_at, lb_date)
+    view = {"maker": args.maker, "sort": args.sort, "top": args.top, "q": args.filter or ""}
+    path = web.write(Path(args.out).resolve() if args.out else web.REPORT_PATH, models, fetched_at, lb_date, view)
     print(f"HTML 리포트: {path}")
     if not args.out:
         webbrowser.open(path.as_uri())
@@ -80,28 +81,21 @@ def open_report(args) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=USAGE, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--maker", choices=d.MAKERS, default="all", help="제조사 (기본 all)")
+    ap.add_argument("--maker", choices=d.MAKERS, default="all", help="처음 보일 제조사 탭 (기본 all)")
     ap.add_argument("--sort", choices=d.SORTS, default="cost", help="정렬 기준 (기본 cost=작업당 비용)")
     ap.add_argument("--top", type=int, default=20, help="점수 상위 N개만 표시 (기본 20, 0=전부)")
     ap.add_argument("--min", type=float, default=0, help="최소 Intelligence Index (기본 제한 없음)")
     ap.add_argument("--filter", help="모델명/제작사 정규식 필터 (예: 'opus|sol')")
     ap.add_argument("--refresh", action="store_true", help="캐시를 무시하고 새로 받기")
     ap.add_argument("--from-html", dest="html", help="URL 대신 저장된 Artificial Analysis 페이지 사용")
-    ap.add_argument("--web", action="store_true", help="HTML 리포트를 만들어 브라우저로 열기")
     ap.add_argument("--out", help="HTML 리포트 저장 경로 (기본 프로젝트 루트의 report.html, 지정하면 브라우저를 열지 않음)")
-    ap.add_argument("--print", action="store_true", help="TUI 대신 표만 출력")
+    ap.add_argument("--print", action="store_true", help="브라우저 대신 터미널에 표 출력")
     ap.add_argument("--markdown", action="store_true", help="마크다운 표로 출력")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
 
-    if args.web or args.out:
+    if not (args.print or args.markdown):
         return open_report(args)
-
-    if not (args.print or args.markdown) and sys.stdout.isatty():
-        from . import tui
-
-        tui.run(args.maker, args.sort, args.top, args.min, args.html, args.filter or "", args.refresh)
-        return 0
 
     try:
         models, _, _ = d.load(args.html, refresh=args.refresh)

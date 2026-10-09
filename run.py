@@ -2,7 +2,7 @@
 """실행 파일. 더블클릭하거나 `python run.py` / `uv run run.py`로 실행한다.
 
 의존성이 없는 Python으로 실행되면(예: Windows 더블클릭) 이 프로젝트의 uv 환경으로 다시 실행한다.
-옵션은 `ai-analysis`와 같다: run.py --web, run.py --print ...
+기본으로 루트의 report.html을 갱신해 브라우저로 연다. 옵션은 `ai-analysis`와 같다 (run.py --print ...).
 """
 import os
 import subprocess
@@ -43,6 +43,6 @@ if __name__ == "__main__":
         sys.exit(rc)
 
     code = main()
-    # TUI는 q로 닫으므로, 표만 출력하고 끝나는 경우에만 창을 붙잡아 둔다
-    pause_if_double_clicked(paused and ("--print" in sys.argv or "--markdown" in sys.argv or "--web" in sys.argv))
+    # 브라우저로 여는 기본 동작은 창을 바로 닫고, 터미널에 표를 출력한 경우에만 창을 붙잡아 둔다
+    pause_if_double_clicked(paused and ("--print" in sys.argv or "--markdown" in sys.argv))
     sys.exit(code)

@@ -12,8 +12,9 @@ from . import style as st
 REPORT_PATH = d.PROJECT_ROOT / "report.html"
 
 
-def build(models: list[d.Model], fetched_at: datetime, lb_date: str | None) -> str:
+def build(models: list[d.Model], fetched_at: datetime, lb_date: str | None, view: dict | None = None) -> str:
     payload = {
+        "view": view or {},
         "models": [asdict(m) for m in models],
         "makers": {k: list(v) for k, v in d.MAKERS.items()},
         "named": sorted(d.NAMED_CREATORS),
@@ -27,9 +28,10 @@ def build(models: list[d.Model], fetched_at: datetime, lb_date: str | None) -> s
     return TEMPLATE.replace("/*DATA*/null", data)
 
 
-def write(path: Path, models: list[d.Model], fetched_at: datetime, lb_date: str | None) -> Path:
+def write(path: Path, models: list[d.Model], fetched_at: datetime, lb_date: str | None,
+          view: dict | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(build(models, fetched_at, lb_date), encoding="utf-8")
+    path.write_text(build(models, fetched_at, lb_date, view), encoding="utf-8")
     return path
 
 
@@ -117,7 +119,7 @@ a { color: var(--accent); }
 </main>
 <script>
 const D = /*DATA*/null;
-const state = { maker: "all", top: 20, q: "", sort: "cost", desc: false, sel: null };
+const state = { maker: "all", top: 20, q: "", sort: "cost", desc: false, sel: null, ...D.view };
 const $ = (id) => document.getElementById(id);
 const metric = (k) => D.metrics.find((m) => m.key === k);
 const fmt = {
@@ -219,6 +221,9 @@ $("q").addEventListener("input", (e) => { state.q = e.target.value; render(); })
 
 $("sub").innerHTML = `데이터 ${D.fetched} · <a href="${D.sources.aa}">Artificial Analysis</a>` +
   (D.lbDate ? ` · <a href="${D.sources.lb}">LiveBench</a> ${D.lbDate} (Agentic = Agentic Coding)` : " · LiveBench 없음");
+$("q").value = state.q;
+if (![...$("top").options].some((o) => +o.value === state.top)) $("top").add(new Option(`Top ${state.top}`, state.top));
+$("top").value = String(state.top);
 renderTabs(); render();
 </script>
 </body>
