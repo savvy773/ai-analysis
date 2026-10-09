@@ -1,7 +1,7 @@
 [project]
 name = "ai-analysis"
 version = "0.1.0"
-description = "Artificial Analysis 리더보드에서 AI 모델 성능·비용 비교표를 출력하는 CLI"
+description = "Artificial Analysis·LiveBench 데이터로 AI 모델 비용·시간·코딩 성능을 비교하는 TUI"
 requires-python = ">=3.14"
 dependencies = [
     "rich==15.0.0",

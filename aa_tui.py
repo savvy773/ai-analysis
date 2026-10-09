@@ -10,20 +10,21 @@ from textual.containers import Horizontal
 from textual.widgets import DataTable, Footer, Header, Input, Static, Tab, Tabs
 
 import aa_data as d
+import aa_style as st
 
-COLUMNS = [("#", "rank"), ("Model", "name"), ("Cost", "cost"), ("Time", "time"),
-           ("Score", "score"), ("Terminal", "tb")]
-SORT_LABEL = {"cost": "Cost", "time": "Time", "score": "Score", "tb": "Terminal"}
+SORT_LABEL = {key: head for head, key in st.METRICS}
 
 
 class LeaderboardApp(App):
     TITLE = "AI model comparison"
     CSS = """
-    #bar { height: 1; padding: 0 1; }
+    #bar { height: 2; padding: 0 1; }
     #bar Tabs { width: 1fr; }
     #search { width: 32; height: 1; border: none; padding: 0 1; }
     DataTable { height: 1fr; }
-    #detail { height: auto; min-height: 3; padding: 0 1; border-top: solid $panel; }
+    DataTable > .datatable--header { background: $panel; color: $text; text-style: bold; }
+    DataTable > .datatable--cursor { background: $primary 35%; }
+    #detail { height: auto; min-height: 3; padding: 0 1; background: $boost; }
     #status { height: 1; padding: 0 1; color: $text-muted; }
     """
     BINDINGS = [
@@ -36,6 +37,7 @@ class LeaderboardApp(App):
         Binding("t", "sort('time')", "Time"),
         Binding("s", "sort('score')", "Score"),
         Binding("b", "sort('tb')", "Terminal"),
+        Binding("g", "sort('agentic')", "Agentic"),
         Binding("plus,equals_sign", "top(5)", "+5", show=False),
         Binding("minus", "top(-5)", "-5", show=False),
         Binding("a", "toggle_all", "Top/All"),
@@ -56,6 +58,7 @@ class LeaderboardApp(App):
         self.models: list[d.Model] = []
         self.rows: list[d.Model] = []
         self.fetched_at: datetime | None = None
+        self.lb_date: str | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -68,9 +71,10 @@ class LeaderboardApp(App):
         yield Footer()
 
     def on_mount(self) -> None:
+        self.theme = "tokyo-night"
         table = self.query_one(DataTable)
-        for label, key in COLUMNS:
-            table.add_column(label, key=key)
+        for label in st.HEAD:
+            table.add_column(label, key=label)
         table.focus()
         self.load(refresh=self.initial_refresh)
 
@@ -79,30 +83,33 @@ class LeaderboardApp(App):
     def load(self, refresh: bool) -> None:
         self.call_from_thread(self.set_status, "불러오는 중..." if not refresh else "새로 받는 중...")
         try:
-            models, fetched_at = d.load(self.html, refresh=refresh)
+            models, fetched_at, lb_date = d.load(self.html, refresh=refresh)
         except Exception as e:  # 네트워크/파싱 오류는 화면에 표시하고 계속 쓴다
             self.call_from_thread(self.set_status, f"[red]불러오지 못했습니다: {e}[/]")
             return
-        self.call_from_thread(self.apply_models, models, fetched_at)
+        self.call_from_thread(self.apply_models, models, fetched_at, lb_date)
 
-    def apply_models(self, models: list[d.Model], fetched_at: datetime) -> None:
-        self.models, self.fetched_at = models, fetched_at
+    def apply_models(self, models: list[d.Model], fetched_at: datetime, lb_date: str | None) -> None:
+        self.models, self.fetched_at, self.lb_date = models, fetched_at, lb_date
         self.refresh_table()
 
     # ---- 화면 ----
     def refresh_table(self) -> None:
         self.rows = d.select(self.models, self.maker, self.top, self.min_score,
                              self.pattern or None, self.sort_key, self.reverse)
-        best = d.best_values(self.rows)
+        tier = st.tiers(self.rows)
         table = self.query_one(DataTable)
         table.clear()
         for i, m in enumerate(self.rows, 1):
             vals = d.cells(m)
-            row: list[Text] = [Text(str(i), justify="right"),
-                               Text(m.name, style=d.MAKER_COLOR.get(m.creator, ""))]
-            for _, key in COLUMNS[2:]:
-                is_best = m.get(key) is not None and m.get(key) == best.get(key)
-                style = "bold green" if is_best else ("bold" if key == "cost" else "")
+            row: list[Text] = [Text(str(i), style=st.MISSING, justify="right"),
+                               Text(m.name, style=st.MAKER_COLOR.get(m.creator, ""))]
+            for _, key in st.METRICS:
+                style, is_best = st.cell_style(key, m.get(key), tier)
+                if key == "cost" and not is_best:
+                    style = f"bold {style}".strip()
+                if key == self.sort_key:
+                    style = f"underline {style}".strip()
                 row.append(Text(("★ " if is_best else "") + vals[key], style=style, justify="right"))
             table.add_row(*row, key=str(i))
         self.update_header()
@@ -120,7 +127,9 @@ class LeaderboardApp(App):
     def set_status(self, message: str | None = None) -> None:
         if message is None:
             when = self.fetched_at.astimezone().strftime("%Y-%m-%d %H:%M") if self.fetched_at else "-"
-            message = f"{len(self.rows)} models · data {when} · ★ best per column · source: {d.URL}"
+            lb = f" · LiveBench {self.lb_date}" if self.lb_date else " · LiveBench 없음"
+            message = (f"{len(self.rows)} models · data {when}{lb} · "
+                       f"[{st.BEST}]★ best[/] [{st.GOOD}]top 25%[/] [{st.POOR}]bottom 25%[/]")
         self.query_one("#status", Static).update(message)
 
     def show_detail(self, m: d.Model) -> None:
@@ -131,6 +140,7 @@ class LeaderboardApp(App):
             f"  ·  Output {d.fmt(m.tps, '.0f', ' tok/s')}"
             f"  ·  First token {d.fmt(m.ttft, '.1f', 's')}"
             f"  ·  Context {ctx}"
+            f"  ·  LiveBench Coding {d.fmt(m.lb_coding, '.1f')}"
         )
 
     @on(DataTable.RowHighlighted)
@@ -188,11 +198,10 @@ class LeaderboardApp(App):
         self.load(refresh=True)
 
     def action_copy_markdown(self) -> None:
-        head = ["#", *(label for label, _ in COLUMNS[1:])]
-        lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+        lines = ["| " + " | ".join(st.HEAD) + " |", "|" + "---|" * len(st.HEAD)]
         for i, m in enumerate(self.rows, 1):
             v = d.cells(m)
-            lines.append(f"| {i} | {m.name} | {v['cost']} | {v['time']} | {v['score']} | {v['tb']} |")
+            lines.append("| " + " | ".join([str(i), m.name, *(v[k] for _, k in st.METRICS)]) + " |")
         self.copy_to_clipboard("\n".join(lines))
         self.notify(f"{len(self.rows)}개 행을 마크다운으로 복사했습니다.")
 

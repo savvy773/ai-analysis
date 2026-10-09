@@ -3,7 +3,7 @@
 USAGE = """Artificial Analysis 리더보드로 AI 모델의 비용·시간·성능을 비교한다.
 
 터미널에서는 대화형 화면(TUI), 파이프·--print에서는 표를 출력한다.
-  ./aa_value.py                      # TUI: 1-5 제조사, c/t/s/b 정렬, / 검색, r 새로고침, q 종료
+  ./aa_value.py                      # TUI: 1-5 제조사, c/t/s/b/g 정렬, / 검색, r 새로고침, q 종료
   ./aa_value.py --maker claude       # 제조사 탭을 골라서 시작
   ./aa_value.py --print --maker google --top 10
   ./aa_value.py --markdown --sort tb
@@ -49,34 +49,33 @@ except ImportError:
     sys.exit(rc)
 
 import aa_data as d
-
-HEAD = ["#", "Model", "Cost", "Time", "Score", "Terminal"]
-KEYS = ["cost", "time", "score", "tb"]
-
+import aa_style as st
 
 def render_markdown(rows: list[d.Model]) -> str:
-    lines = ["| " + " | ".join(HEAD) + " |", "|" + "---|" * len(HEAD)]
+    lines = ["| " + " | ".join(st.HEAD) + " |", "|" + "---|" * len(st.HEAD)]
     for i, m in enumerate(rows, 1):
         v = d.cells(m)
-        lines.append("| " + " | ".join([str(i), m.name, *(v[k] for k in KEYS)]) + " |")
+        lines.append("| " + " | ".join([str(i), m.name, *(v[k] for _, k in st.METRICS)]) + " |")
     return "\n".join(lines)
 
 
 def render_table(rows: list[d.Model], title: str) -> Table:
-    best = d.best_values(rows)
-    table = Table(title=title, box=box.ROUNDED, header_style="bold cyan", row_styles=["", "on grey11"])
-    for c, h in enumerate(HEAD):
-        table.add_column(h, justify="left" if c == 1 else "right", no_wrap=True,
-                         style="bold" if c == 2 else None)  # 작업당 비용 강조
+    tier = st.tiers(rows)
+    table = Table(title=title, box=box.ROUNDED, header_style="bold #c0caf5", border_style="#3b4261")
+    for c, h in enumerate(st.HEAD):
+        table.add_column(h, justify="left" if c == 1 else "right", no_wrap=True)
     for i, m in enumerate(rows, 1):
         v = d.cells(m)
-        color = d.MAKER_COLOR.get(m.creator)
-        row = [str(i), f"[{color}]{m.name}[/]" if color else m.name]
-        for k in KEYS:
-            is_best = m.get(k) is not None and m.get(k) == best.get(k)
-            row.append(f"[bold green]★ {v[k]}[/]" if is_best else v[k])
+        color = st.MAKER_COLOR.get(m.creator)
+        row = [f"[{st.MISSING}]{i}[/]", f"[{color}]{m.name}[/]" if color else m.name]
+        for _, k in st.METRICS:
+            style, is_best = st.cell_style(k, m.get(k), tier)
+            if k == "cost" and not is_best:
+                style = f"bold {style}".strip()
+            text = ("★ " if is_best else "") + v[k]
+            row.append(f"[{style}]{text}[/]" if style else text)
         table.add_row(*row)
-    table.caption = "★ best per column"
+    table.caption = f"[{st.BEST}]★ best[/]  [{st.GOOD}]top 25%[/]  [{st.POOR}]bottom 25%[/]  · Agentic = LiveBench Agentic Coding"
     return table
 
 
@@ -115,7 +114,7 @@ def main() -> int:
         return 0
 
     try:
-        models, _ = d.load(args.html, refresh=args.refresh)
+        models, _, _ = d.load(args.html, refresh=args.refresh)
     except (OSError, ValueError) as e:
         print(f"불러오지 못했습니다: {e}", file=sys.stderr)
         return 1
