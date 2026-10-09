@@ -104,7 +104,7 @@ def fmt(v, spec: str, suffix: str = "") -> str:
     return "-" if v is None else f"{v:{spec}}{suffix}"
 
 
-HEAD = ["순위", "조합", "작업당 비용", "총 응답 시간", "점수", "터미널"]
+HEAD = ["#", "Model", "Cost", "Time", "Score", "Terminal"]
 # 모델명 접두어 → 색 (그 외 모델은 기본색)
 MODEL_STYLE = {"gpt": "#10a37f", "claude": "#d97757"}
 # 열 인덱스 → (값 키, 높을수록 좋은가): 열마다 최고 값을 강조
@@ -147,7 +147,7 @@ def render_table(rows: list[dict], title: str) -> Table:
             if col in best and r[key] == best[col]:
                 row[col] = f"[bold green]★ {row[col]}[/]"
         table.add_row(*row)
-    table.caption = "★ 열별 최고 값"
+    table.caption = "★ best per column"
     return table
 
 
@@ -176,9 +176,9 @@ def main() -> int:
     rows = sorted(build_rows(models, args.min, args.filter), key=SORTS[args.sort])
     if args.top:
         rows = rows[: args.top]
-    title = f"Intelligence Index ≥ {args.min:g} · 정렬: {args.sort} · {len(rows)}개"
+    title = f"Intelligence Index ≥ {args.min:g} · sort: {args.sort} · {len(rows)} models"
     if args.markdown:
-        print(f"{title} (출처: {URL})\n\n{render_markdown(rows)}")
+        print(f"{title} (source: {URL})\n\n{render_markdown(rows)}")
     else:
         table = render_table(rows, title)
         console = Console()
@@ -187,7 +187,7 @@ def main() -> int:
         if console.width < need:
             console = Console(width=need)
         console.print(table)
-        console.print(f"[dim]출처: {URL}[/]")
+        console.print(f"[dim]source: {URL}[/]")
     return 0
 
 

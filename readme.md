@@ -4,10 +4,10 @@
 
 | 열 | 내용 |
 |---|---|
-| 작업당 비용 | Intelligence Index 실행 비용 / 작업 |
-| 총 응답 시간 | 요청 1회 중앙값 |
-| 점수 | Intelligence Index |
-| 터미널 | Terminal-Bench 4.0 (터미널 에이전트 코딩) |
+| Cost | 작업당 비용 (Intelligence Index 실행 비용 / 작업) |
+| Time | 총 응답 시간 (요청 1회 중앙값) |
+| Score | Intelligence Index |
+| Terminal | Terminal-Bench 4.0 (터미널 에이전트 코딩) |
 
 열마다 가장 좋은 값에 ★, 모델명은 GPT 초록 · Claude 주황.
 
