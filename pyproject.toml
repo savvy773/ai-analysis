@@ -5,6 +5,7 @@ description = "Artificial Analysis 리더보드에서 AI 모델 성능·비용 �
 requires-python = ">=3.14"
 dependencies = [
     "rich==15.0.0",
+    "textual==8.2.8",
 ]
 
 [tool.uv]
