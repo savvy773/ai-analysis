@@ -43,7 +43,7 @@ def render_table(rows: list[d.Model], title: str) -> Table:
             text = v[k]
             row.append(f"[{style}]{text}[/]" if style else text)
         table.add_row(*row)
-    table.caption = f"[{st.BEST}]best[/]  [{st.GOOD}]top 25%[/]  [{st.POOR}]bottom 25%[/]  · Agentic = LiveBench Agentic Coding"
+    table.caption = f"[{st.BEST}]best[/]  [{st.GOOD}]top 30%[/]  [{st.POOR}]bottom 30%[/]  · Agentic = LiveBench Agentic Coding"
     return table
 
 
@@ -90,8 +90,8 @@ def main() -> int:
     ap.add_argument("--maker", choices=d.MAKERS, default="all", help="처음 보일 제조사 탭 (기본 all)")
     ap.add_argument("--sort", choices=d.SORTS, default="cost", help="정렬 기준 (기본 cost=작업당 비용)")
     ap.add_argument("--top", type=int, default=20, help="점수 상위 N개만 표시 (기본 20, 0=전부)")
-    ap.add_argument("--min", type=float, choices=[0, 40, 50, 60], default=40.0, help="Minimum Intelligence (default 40; 0=Any)")
-    ap.add_argument("--min-terminal", type=float, choices=[0, 40, 50, 60], default=0.0, help="Minimum Terminal percentage, AND with --min (default 0)")
+    ap.add_argument("--min", type=float, choices=[0, 40, 45, 50, 55, 60], default=40.0, help="Minimum Intelligence (default 40; 0=Any)")
+    ap.add_argument("--min-terminal", type=float, choices=[0, 40, 45, 50, 55, 60], default=0.0, help="Minimum Terminal percentage, AND with --min (default 0)")
     ap.add_argument("--filter", help="모델명/제작사 정규식 필터 (예: 'opus|sol')")
     ap.add_argument("--refresh", action="store_true", default=True, help="Fetch current source data (default)")
     ap.add_argument("--cached", dest="refresh", action="store_false", help="Use cached data while valid")
