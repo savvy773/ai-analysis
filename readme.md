@@ -2,6 +2,14 @@
 
 AI 모델의 비용·응답 시간·코딩 성능을 한 표로 비교한다. 데이터는 [Artificial Analysis](https://artificialanalysis.ai/leaderboards/models)와 [LiveBench](https://livebench.ai/)에서 가져오며 AI API 토큰은 쓰지 않는다.
 
+## 화면
+
+![모델 비교 화면](docs/images/overview.png)
+
+최소 Intelligence·Terminal 조건을 AND로 적용하고, 최대 4개 모델을 VS로 비교한다. 하단 추천은 비용 60%·시간 40%의 상대 효율을 합산하며 비중을 조절할 수 있다. 필터·정렬·추천 비중은 자동 저장하고 Save로 Reset 기본값을 지정한다.
+
+계산과 조작은 [사용법](docs/usage.md), 수집 경로와 데이터 흐름도는 [기술 문서](docs/tech-stack.md)를 참고한다.
+
 ## 빠른 실행
 
 | 하고 싶은 것 | 방법 |

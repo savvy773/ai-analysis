@@ -89,7 +89,7 @@ def main() -> int:
     ap.add_argument("--maker", choices=d.MAKERS, default="all", help="처음 보일 제조사 탭 (기본 all)")
     ap.add_argument("--sort", choices=d.SORTS, default="cost", help="정렬 기준 (기본 cost=작업당 비용)")
     ap.add_argument("--top", type=int, default=20, help="점수 상위 N개만 표시 (기본 20, 0=전부)")
-    ap.add_argument("--min", type=float, choices=[0, 40, 50, 60], default=40.0, help="Minimum Score (default 40; 0=Any)")
+    ap.add_argument("--min", type=float, choices=[0, 40, 50, 60], default=40.0, help="Minimum Intelligence (default 40; 0=Any)")
     ap.add_argument("--min-terminal", type=float, choices=[0, 40, 50, 60], default=0.0, help="Minimum Terminal percentage, AND with --min (default 0)")
     ap.add_argument("--filter", help="모델명/제작사 정규식 필터 (예: 'opus|sol')")
     ap.add_argument("--refresh", action="store_true", default=True, help="Fetch current source data (default)")
@@ -100,7 +100,7 @@ def main() -> int:
     ap.add_argument("--markdown", action="store_true", help="마크다운 표로 출력")
     args = ap.parse_args()
     if not (0 <= args.min < float("inf")) or not (0 <= args.min_terminal <= 100):
-        ap.error("Minimum Score must be non-negative and finite; Terminal must be between 0 and 100.")
+        ap.error("Minimum Intelligence must be non-negative and finite; Terminal must be between 0 and 100.")
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
 
     if not (args.print or args.markdown):

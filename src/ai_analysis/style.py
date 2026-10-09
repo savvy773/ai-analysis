@@ -2,7 +2,14 @@
 from . import data as d
 
 # (헤더, 값 키) — 왼쪽일수록 중요
-METRICS = [("Cost", "cost"), ("Time", "time"), ("Score", "score"), ("Terminal", "tb"), ("Agentic", "agentic")]
+METRICS = [("Cost", "cost"), ("Time", "time"), ("Intelligence", "score"), ("Terminal", "tb"), ("Agentic", "agentic")]
+METRIC_HELP = {
+    "cost": "Artificial Analysis cost per Intelligence Index task (USD). Lower is better.",
+    "time": "Median end-to-end response time (seconds). Lower is better.",
+    "score": "Artificial Analysis Intelligence Index. Higher is better.",
+    "tb": "Terminal-Bench 4.0 score (%). Higher is better.",
+    "agentic": "LiveBench Agentic Coding average. Higher is better.",
+}
 HEAD = ["#", "Model", *(h for h, _ in METRICS)]
 
 # 어두운 배경에서 눈이 덜 피로한 톤

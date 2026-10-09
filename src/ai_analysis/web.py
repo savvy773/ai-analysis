@@ -19,8 +19,8 @@ def build(models: list[d.Model], fetched_at: datetime, lb_date: str | None, view
         "makers": {k: list(v) for k, v in d.MAKERS.items()},
         "named": sorted(d.NAMED_CREATORS),
         "colors": st.MAKER_COLOR,
-        "metrics": [{"head": h, "key": k, "high": d.SORTS[k][1]} for h, k in st.METRICS],
-        "fetched": fetched_at.astimezone().strftime("%Y-%m-%d %H:%M"),
+        "metrics": [{"head": h, "key": k, "high": d.SORTS[k][1], "help": st.METRIC_HELP[k]} for h, k in st.METRICS],
+        "fetched": fetched_at.astimezone().strftime("%y%m%d %H:%M"),
         "lbDate": lb_date,
         "sources": {"aa": d.URL, "lb": d.LB_URL},
     }
@@ -68,10 +68,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, tr:focus-visibl
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 13px/1.45 system-ui, -apple-system, "Segoe UI", "Noto Sans KR", sans-serif; }
 main { max-width: 1440px; margin: 0 auto; padding: 16px 20px 24px; }
-h1 { font-size: 18px; margin: 0 0 2px; }
+h1 { font-size: 18px; margin: 0; }
+.report-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.report-header .sub { margin: 0; }
 .sub { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
 .toolbar-top, .toolbar-bottom { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
-.toolbar-top #q { margin-left: auto; }
+.toolbar-top { gap: 6px; margin-bottom: 6px; font-size: 12px; }
+.toolbar-top #q { margin-left: auto; flex-basis: 160px; width: 160px; min-width: 120px; }
+.toolbar-top #q, .toolbar-top > .quiet-button { height: 28px; box-sizing: border-box; padding: 3px 8px; border-radius: 6px; }
+.toolbar-top .tabs { padding: 2px; gap: 1px; border-radius: 6px; }
+.toolbar-top .tabs button { padding: 3px 7px; border-radius: 4px; }
+.toolbar-top .tabs .dot { width: 6px; height: 6px; margin-right: 4px; }
 .toolbar-bottom { display: grid; grid-template-columns: auto auto auto minmax(0, 1fr); }
 .toolbar-bottom .sort-settings { margin-left: auto; min-width: 0; flex-wrap: nowrap; }
 .controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
@@ -112,11 +119,16 @@ input { flex: 1; min-width: 160px; }
 #sort-order { color: var(--accent); width: 240px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .results-bar, .compare-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .results-bar { font-size: 12px; color: var(--muted); margin: 0 0 8px; min-height: 18px; white-space: nowrap; }
+.compare-shortcuts { display: flex; gap: 6px; }
+.compare-shortcuts .quiet-button { padding: 2px 8px; font-size: 11px; }
+#jump-compare { width: 84px; color: var(--accent); font-variant-numeric: tabular-nums; }
 .comparison .sub { margin: 4px 0 8px; }
 .compare-check { min-width: 0; width: 16px; height: 16px; margin: 0; vertical-align: middle; cursor: pointer; }
 .compare-check:disabled { opacity: .3; cursor: default; }
-.leaderboard { height: clamp(280px, 58vh, 620px); overflow: auto; scrollbar-gutter: stable; overflow-anchor: none; }
+.leaderboard { height: 562px; overflow: auto; scrollbar-gutter: stable; overflow-anchor: none; }
 .leaderboard table { table-layout: fixed; min-width: 800px; }
+.leaderboard th { height: 30px; padding: 4px 10px; line-height: 18px; }
+.leaderboard td { height: 26px; padding: 3px 10px; line-height: 18px; }
 .leaderboard thead th { z-index: 1; }
 .leaderboard th:first-child { width: 38px; }
 .leaderboard th:nth-child(2) { width: 30%; }
@@ -149,6 +161,18 @@ input { flex: 1; min-width: 160px; }
   th, td { padding: 6px 8px; }
 }
 .comparison { margin-top: 16px; }
+.recommendations { margin-top: 16px; }
+.recommendations h2 { font-size: 15px; margin: 0; }
+.recommendation-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.weight-control { display: inline-flex; align-items: center; gap: 8px; }
+.weight-control input { flex: none; width: 120px; min-width: 0; padding: 0; }
+#weight-label { min-width: 132px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+#recommendations-result { height: 218px; overflow: auto; scrollbar-gutter: stable; }
+#recommendations-result table { table-layout: fixed; min-width: 590px; }
+#recommendations-result th:first-child { width: 40px; }
+#recommendations-result th:nth-child(2) { width: 44%; }
+#recommendations-result td.model { overflow: hidden; text-overflow: ellipsis; }
+#recommendations-result th, #recommendations-result tr { cursor: default; }
 .comparison h2 { font-size: 15px; margin: 0 0 8px; }
 .comparison select { min-width: 0; max-width: 100%; }
 .comparison label { display: flex; align-items: center; gap: 8px; }
@@ -156,6 +180,7 @@ input { flex: 1; min-width: 160px; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 th, td { padding: 6px 10px; text-align: right; white-space: nowrap; }
+th + th, td + td { border-left: 1px solid var(--line); }
 th:nth-child(2), td:nth-child(2) { text-align: left; }
 thead th { position: sticky; top: 0; background: var(--panel); border-bottom: 1px solid var(--line);
   font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); cursor: pointer;
@@ -186,8 +211,10 @@ a { color: var(--accent); }
 </head>
 <body>
 <main>
-  <h1>AI Model Comparison</h1>
-  <div class="sub" id="sub"></div>
+  <header class="report-header">
+    <h1>AI Model Comparison</h1>
+    <div class="sub" id="sub"></div>
+  </header>
   <div class="toolbar-top">
     <div class="tabs" id="tabs"></div>
     <input id="q" type="search" aria-label="Search models" placeholder="Search models" title="Search by name or maker. Regex supported, e.g. opus|sol">
@@ -195,13 +222,13 @@ a { color: var(--accent); }
     <button class="quiet-button reset-button" id="reset-filters" type="button" aria-label="Restore defaults" title="Restore saved defaults and clear comparison selections">Reset</button>
   </div>
   <div class="toolbar-bottom">
-    <select id="top" aria-label="Top models by Score" title="Select top models by Score before sorting">
+    <select id="top" aria-label="Top models by Intelligence" title="Select top models by Artificial Analysis Intelligence Index before sorting">
       <option value="10">Top 10</option><option value="20" selected>Top 20</option>
       <option value="40">Top 40</option><option value="0">All</option>
     </select>
     <div class="score-filter">
       <span class="minimum-label">Minimum</span>
-      <label for="min-score">Score</label>
+      <label for="min-score">Intelligence</label>
       <select id="min-score" title="Minimum Intelligence Index"></select>
     </div>
     <div class="score-filter">
@@ -212,24 +239,36 @@ a { color: var(--accent); }
       <label class="toggle" title="Later keys break ties at the displayed one-decimal precision."><input id="multi-sort" type="checkbox" role="switch">Multi-sort</label>
     </div>
   </div>
-  <div class="results-bar"><span id="result-count" role="status"></span><span>Filters use AND · Top by Score</span></div>
+  <div class="results-bar"><span id="result-count" role="status"></span>
+    <div class="compare-shortcuts"><button class="quiet-button" id="jump-compare" type="button" title="View selected models side by side">VS 0/4 ↓</button>
+      <button class="quiet-button" id="clear-compare-top" type="button" title="Clear comparison selections">Clear</button></div></div>
   <div class="card leaderboard" tabindex="0" role="region" aria-label="Model leaderboard"><table><thead><tr id="head"></tr></thead><tbody id="body"></tbody></table></div>
   <div class="legend">
     <span><b class="best">Best in view</b></span><span><b class="good">●</b> Top 25%</span>
     <span><b class="poor">●</b> Bottom 25%</span><span>Click headers to sort · Check up to 4 models to compare</span>
   </div>
   <div class="detail" id="detail"></div>
-  <section class="comparison" aria-labelledby="vs-title">
+  <section class="comparison" aria-labelledby="vs-title" tabindex="-1">
     <div class="compare-heading"><h2 id="vs-title">Compare <span id="compare-count">0 / 4</span></h2>
       <button id="clear-compare" class="quiet-button" type="button">Clear</button></div>
     <p class="sub">Compare 2–4 models equally. Green: best available. Amber: Time ≥30% slower than fastest.</p>
     <div class="card" id="vs-result" aria-live="polite"></div>
   </section>
+  <section class="recommendations" aria-labelledby="recommendations-title">
+    <div class="recommendation-heading">
+      <h2 id="recommendations-title">Recommended</h2>
+      <label class="weight-control" for="cost-weight"><span id="weight-label"></span>
+        <input id="cost-weight" type="range" min="0" max="100" step="10" value="60" aria-label="Cost weight as a percentage">
+      </label>
+    </div>
+    <p class="sub" id="recommendation-summary"></p>
+    <div class="card" id="recommendations-result" aria-live="polite"></div>
+  </section>
 </main>
 <div id="settings-status" class="settings-toast" role="status"></div>
 <script>
 const D = /*DATA*/null;
-const state = { maker: "all", top: 20, q: "", min: 40, terminalMin: 0, sort: "cost", desc: false, sel: null, ...D.view, compare: [], multi: false, sortKeys: [] };
+const state = { maker: "all", top: 20, q: "", min: 40, terminalMin: 0, sort: "cost", desc: false, sel: null, ...D.view, compare: [], multi: false, sortKeys: [], costWeight: 60 };
 const $ = (id) => document.getElementById(id);
 const metric = (k) => D.metrics.find((m) => m.key === k);
 const STORAGE_KEY = "ai-analysis.ui.v1";
@@ -243,6 +282,7 @@ function restoreSettings(source, useExplicit = true) {
       if (Object.hasOwn(D.makers, saved.maker)) state.maker = saved.maker;
       if (Number.isInteger(saved.top) && saved.top >= 0) state.top = saved.top;
       if (typeof saved.q === "string") state.q = saved.q;
+      if (Number.isFinite(saved.costWeight) && saved.costWeight >= 0 && saved.costWeight <= 100) state.costWeight = saved.costWeight;
       for (const [key, max] of [["min", Infinity], ["terminalMin", 100]]) {
         if (Number.isFinite(saved[key]) && saved[key] >= 0 && saved[key] <= max) state[key] = saved[key];
       }
@@ -268,7 +308,7 @@ function restoreSettings(source, useExplicit = true) {
 function settingsSnapshot() {
   return { maker: state.maker, top: state.top, q: state.q,
       min: state.min, terminalMin: state.terminalMin, sort: state.sort, desc: state.desc,
-      multi: state.multi, sortKeys: state.sortKeys,
+      multi: state.multi, sortKeys: state.sortKeys, costWeight: state.costWeight,
       compare: state.compare.map((i) => JSON.stringify([D.models[i].creator, D.models[i].name])) };
 }
 function saveSettings() {
@@ -289,13 +329,15 @@ function matchesMaker(m) {
   return m.creator === D.makers[state.maker][1];
 }
 
-function rows() {
+function matchingModels() {
   let rx = null;
   $("q").setAttribute("aria-invalid", "false");
   try { rx = state.q ? new RegExp(state.q, "i") : null; } catch { $("q").setAttribute("aria-invalid", "true"); return []; }
-  let list = D.models.filter((m) => m.score >= state.min &&
+  return D.models.filter((m) => m.score >= state.min &&
     (state.terminalMin <= 0 || (m.tb != null && m.tb * 100 >= state.terminalMin)) &&
     matchesMaker(m) && (!rx || rx.test(m.name + " " + m.creator)));
+}
+function rows(list = matchingModels()) {
   list.sort((a, b) => b.score - a.score);
   if (state.top) list = list.slice(0, state.top);
   return list.sort((a, b) => {
@@ -346,14 +388,15 @@ function render() {
     compareX: comparison.scrollLeft, compareY: comparison.scrollTop };
   const focused = document.activeElement;
   const focusHeader = focused?.closest("#head th[data-k]")?.dataset.k;
-  const list = rows(), t = tiers(list);
+  const candidates = matchingModels();
+  const list = rows([...candidates]), t = tiers(list);
   const sorts = activeSorts();
   $("sort-order").textContent = sorts.map(({ key, desc }) => `${metric(key).head} ${metric(key).high !== desc ? "↓" : "↑"}`).join(" › ");
   $("multi-sort").checked = state.multi;
   $("result-count").textContent = $("q").getAttribute("aria-invalid") === "true" ? "Invalid search pattern" : `${list.length} shown / ${D.models.length} models`;
   $("head").innerHTML = `<th>#</th><th>Model</th>` + D.metrics.map(({ head, key, high }) => {
     const priority = sorts.findIndex((s) => s.key === key), active = priority >= 0, descending = active && high !== sorts[priority].desc;
-    return `<th data-k="${key}" class="${active ? "sorted" : ""}" aria-sort="${active ? (descending ? "descending" : "ascending") : "none"}"><button class="sort-button">${head}<span class="sort-indicator">${active ? (descending ? " ↓" : " ↑") + (state.multi ? ` ${priority + 1}` : "") : ""}</span></button></th>`;
+    return `<th data-k="${key}" class="${active ? "sorted" : ""}" aria-sort="${active ? (descending ? "descending" : "ascending") : "none"}"><button class="sort-button" title="${escapeHTML(metric(key).help)}">${head}<span class="sort-indicator">${active ? (descending ? " ↓" : " ↑") + (state.multi ? ` ${priority + 1}` : "") : ""}</span></button></th>`;
   }).join("") + `<th>VS</th>`;
   $("body").innerHTML = list.length ? list.map((m, i) => {
     const color = D.colors[m.creator] || "inherit";
@@ -370,6 +413,7 @@ function render() {
   const selected = state.sel != null ? D.models[state.sel] : null;
   renderDetail(list.includes(selected) ? selected : list[0]);
   renderComparison();
+  renderRecommendations(candidates);
   saveSettings();
   leaderboard.scrollLeft = scroll.tableX; leaderboard.scrollTop = scroll.tableY;
   comparison.scrollLeft = scroll.compareX; comparison.scrollTop = scroll.compareY;
@@ -400,6 +444,9 @@ function renderComparison() {
   const container = $("vs-result");
   container.replaceChildren();
   $("compare-count").textContent = `${models.length} / 4`;
+  $("jump-compare").textContent = `VS ${models.length}/4 ↓`;
+  $("jump-compare").disabled = models.length < 2;
+  $("clear-compare-top").disabled = models.length === 0;
   $("clear-compare").disabled = models.length === 0;
   if (models.length < 2) {
     const message = document.createElement("div"); message.className = "empty";
@@ -415,7 +462,7 @@ function renderComparison() {
   }
   const body = table.createTBody();
   for (const { head, key, high } of D.metrics) {
-    const row = body.insertRow(); row.insertCell().textContent = head;
+    const row = body.insertRow(); const label = row.insertCell(); label.textContent = head; label.title = metric(key).help;
     const values = models.map((m) => m[key]).filter((v) => v != null);
     const best = high ? Math.max(...values) : Math.min(...values);
     const allEqual = values.length > 1 && values.every((v) => v === values[0]);
@@ -439,7 +486,57 @@ function renderComparison() {
   container.append(table);
 }
 
+function recommended(models) {
+  const eligible = models.filter((m) => Number.isFinite(m.cost) && m.cost > 0 && Number.isFinite(m.time) && m.time > 0);
+  if (!eligible.length) return [];
+  const minCost = Math.min(...eligible.map((m) => m.cost));
+  const minTime = Math.min(...eligible.map((m) => m.time));
+  const weight = state.costWeight / 100;
+  return eligible.map((model) => ({ model, value: 100 * (weight * minCost / model.cost + (1 - weight) * minTime / model.time) }))
+    .sort((a, b) => b.value - a.value || a.model.cost - b.model.cost || a.model.time - b.model.time);
+}
+
+function renderRecommendations(models = matchingModels()) {
+  const ranked = recommended(models);
+  $("cost-weight").value = String(state.costWeight);
+  $("weight-label").textContent = `Cost ${state.costWeight}% · Time ${100 - state.costWeight}%`;
+  $("recommendation-summary").textContent = `Top 5 of ${ranked.length} matching models · No time limit · ${models.length - ranked.length} missing valid cost/time`;
+  const container = $("recommendations-result");
+  container.replaceChildren();
+  if (!ranked.length) {
+    const empty = document.createElement("div"); empty.className = "empty";
+    empty.textContent = "No matching models with valid cost and time. Adjust the filters.";
+    container.append(empty); return;
+  }
+  const table = document.createElement("table"), header = table.createTHead().insertRow();
+  for (const name of ["#", "Model", "Cost", "Time", "Value"]) {
+    const th = document.createElement("th"); th.textContent = name;
+    if (name === "Value") th.title = "100 × (cost weight × lowest cost / cost + time weight × fastest time / time). Higher is better; relative to matching models before Top selection.";
+    header.append(th);
+  }
+  const body = table.createTBody();
+  ranked.slice(0, 5).forEach(({ model, value }, index) => {
+    const row = body.insertRow();
+    for (const [column, text] of [String(index + 1), model.name, fmt.cost(model.cost), fmt.time(model.time), value.toFixed(1)].entries()) {
+      const cell = row.insertCell(); cell.textContent = text;
+      if (column === 1) { cell.className = "model"; cell.style.color = D.colors[model.creator] || "inherit"; cell.title = model.name; }
+      if (column === 4 && value === ranked[0].value) cell.className = "winner";
+    }
+  });
+  container.append(table);
+}
+
+$("cost-weight").addEventListener("input", (e) => {
+  state.costWeight = Number(e.target.value); renderRecommendations(); saveSettings();
+});
+
 $("clear-compare").addEventListener("click", () => { state.compare = []; render(); });
+$("clear-compare-top").addEventListener("click", () => { state.compare = []; render(); });
+$("jump-compare").addEventListener("click", () => {
+  const section = document.querySelector(".comparison");
+  section.scrollIntoView({ behavior: "instant", block: "start" });
+  section.focus({ preventScroll: true });
+});
 $("body").addEventListener("change", (e) => {
   const input = e.target.closest("[data-compare]"); if (!input) return;
   const index = +input.dataset.compare;
@@ -488,7 +585,7 @@ for (const [name, key] of [["score", "min"], ["terminal", "terminalMin"]]) {
   });
 }
 $("reset-filters").addEventListener("click", () => {
-  Object.assign(state, { maker: "all", top: 20, q: "", min: 40, terminalMin: 0, sort: "cost", desc: false, sel: null, compare: [], multi: false, sortKeys: [{ key: "cost", desc: false }] });
+  Object.assign(state, { maker: "all", top: 20, q: "", min: 40, terminalMin: 0, sort: "cost", desc: false, sel: null, compare: [], multi: false, sortKeys: [{ key: "cost", desc: false }], costWeight: 60 });
   let defaults = null;
   try { defaults = localStorage.getItem(DEFAULT_KEY); } catch { /* Built-in defaults remain available. */ }
   restoreSettings(defaults, false);
@@ -511,8 +608,8 @@ $("save-defaults").addEventListener("click", () => {
   settingsNotice = setTimeout(() => { $("settings-status").textContent = ""; }, 3000);
 });
 
-$("sub").innerHTML = `Fetched ${D.fetched} · <a href="${D.sources.aa}">Artificial Analysis</a>` +
-  (D.lbDate ? ` · <a href="${D.sources.lb}">LiveBench</a> question set: ${D.lbDate}` : " · LiveBench unavailable");
+$("sub").innerHTML = `Collected ${D.fetched} · <a href="${D.sources.aa}" target="_blank" rel="noopener noreferrer">Artificial Analysis</a>` +
+  (D.lbDate ? ` · <a href="${D.sources.lb}" target="_blank" rel="noopener noreferrer">LiveBench</a>` : " · LiveBench unavailable");
 $("q").value = state.q;
 $("min-score").value = String(state.min);
 if (![...$("top").options].some((o) => +o.value === state.top)) $("top").add(new Option(`Top ${state.top}`, state.top));
