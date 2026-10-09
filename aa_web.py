@@ -8,6 +8,10 @@ import aa_data as d
 import aa_style as st
 
 
+# 기본 저장 위치: 프로젝트 루트
+REPORT_PATH = Path(__file__).resolve().parent / "report.html"
+
+
 def build(models: list[d.Model], fetched_at: datetime, lb_date: str | None) -> str:
     payload = {
         "models": [asdict(m) for m in models],

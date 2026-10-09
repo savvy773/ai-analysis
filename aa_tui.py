@@ -202,7 +202,7 @@ class LeaderboardApp(App):
 
         if not self.models or not self.fetched_at:
             return
-        path = aa_web.write((d.CACHE_DIR / "report.html").resolve(), self.models, self.fetched_at, self.lb_date)
+        path = aa_web.write(aa_web.REPORT_PATH, self.models, self.fetched_at, self.lb_date)
         webbrowser.open(path.as_uri())
         self.notify(f"브라우저로 열었습니다: {path}")
 

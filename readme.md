@@ -22,7 +22,7 @@ uv run aa_value.py                         # 대화형 화면 (TUI)
 uv run aa_value.py --maker claude          # 제조사 탭을 골라 시작
 uv run aa_value.py --print --top 10        # 표만 출력
 uv run aa_value.py --markdown --sort agentic
-uv run aa_value.py --web                   # HTML 리포트를 만들어 브라우저로 열기
+uv run aa_value.py --web                   # 프로젝트 루트에 report.html을 만들고 브라우저로 열기
 uv run aa_value.py --refresh               # 캐시 무시하고 새로 받기
 ```
 

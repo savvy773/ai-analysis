@@ -105,7 +105,7 @@ def open_report(args) -> int:
     except (OSError, ValueError) as e:
         print(f"불러오지 못했습니다: {e}", file=sys.stderr)
         return 1
-    path = aa_web.write(Path(args.out or d.CACHE_DIR / "report.html").resolve(), models, fetched_at, lb_date)
+    path = aa_web.write(Path(args.out).resolve() if args.out else aa_web.REPORT_PATH, models, fetched_at, lb_date)
     print(f"HTML 리포트: {path}")
     if not args.out:
         webbrowser.open(path.as_uri())
@@ -122,7 +122,7 @@ def main() -> int:
     ap.add_argument("--refresh", action="store_true", help="캐시를 무시하고 새로 받기")
     ap.add_argument("--from-html", dest="html", help="URL 대신 저장된 Artificial Analysis 페이지 사용")
     ap.add_argument("--web", action="store_true", help="HTML 리포트를 만들어 브라우저로 열기")
-    ap.add_argument("--out", help="HTML 리포트 저장 경로 (기본 .cache/report.html, 지정하면 브라우저를 열지 않음)")
+    ap.add_argument("--out", help="HTML 리포트 저장 경로 (기본 프로젝트 루트의 report.html, 지정하면 브라우저를 열지 않음)")
     ap.add_argument("--print", action="store_true", help="TUI 대신 표만 출력")
     ap.add_argument("--markdown", action="store_true", help="마크다운 표로 출력")
     args = ap.parse_args()
