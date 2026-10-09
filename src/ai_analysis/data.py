@@ -2,6 +2,7 @@
 import csv
 import io
 import json
+import math
 import os
 import re
 import urllib.request
@@ -122,30 +123,43 @@ def parse(html: str) -> list[dict]:
     return [m for m in raw_models.values() if m.get("intelligenceIndex") is not None]
 
 
+def numeric(value) -> float | None:
+    """Next.js 누락 값($undefined 등)을 제외하고 유한한 수만 반환한다."""
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
+
+
 def to_models(raw: list[dict], livebench: dict[str, dict] | None = None) -> list[Model]:
     livebench = livebench or {}
     out = []
     for m in raw:
-        cost = m.get("intelligenceIndexCostPerTask")
-        if not cost:
+        cost = numeric(m.get("intelligenceIndexCostPerTask"))
+        score = numeric(m.get("intelligenceIndex"))
+        if cost is None or cost <= 0 or score is None:
             continue
         name = m.get("shortName") or m.get("name") or m["slug"]
         base, effort = model_key(name)
         lb = livebench.get(f"{base}|{effort}", {})
+        context = numeric(m.get("contextWindowTokens"))
         out.append(Model(
             name=name.replace(" (with fallback)", "").replace(" with fallback", ""),
             creator=m.get("modelCreatorName", ""),
-            score=m["intelligenceIndex"],
+            score=score,
             cost=cost,
-            time=m.get("medianEndToEndResponseTimeSeconds"),
-            tb=m.get("terminalBench40"),
-            tps=m.get("medianOutputTokensPerSecond"),
-            ttft=m.get("medianTimeToFirstTokenSeconds"),
-            price_in=m.get("price1mInputTokens"),
-            price_out=m.get("price1mOutputTokens"),
-            context=m.get("contextWindowTokens"),
-            agentic=lb.get("agentic"),
-            lb_coding=lb.get("coding"),
+            time=numeric(m.get("medianEndToEndResponseTimeSeconds")),
+            tb=numeric(m.get("terminalBench40")),
+            tps=numeric(m.get("medianOutputTokensPerSecond")),
+            ttft=numeric(m.get("medianTimeToFirstTokenSeconds")),
+            price_in=numeric(m.get("price1mInputTokens")),
+            price_out=numeric(m.get("price1mOutputTokens")),
+            context=int(context) if context is not None else None,
+            agentic=numeric(lb.get("agentic")),
+            lb_coding=numeric(lb.get("coding")),
         ))
     return out
 
