@@ -9,8 +9,8 @@ from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.widgets import DataTable, Footer, Header, Input, Static, Tab, Tabs
 
-import aa_data as d
-import aa_style as st
+from . import data as d
+from . import style as st
 
 SORT_LABEL = {key: head for head, key in st.METRICS}
 
@@ -198,11 +198,11 @@ class LeaderboardApp(App):
     def action_web(self) -> None:
         import webbrowser
 
-        import aa_web
+        from . import web
 
         if not self.models or not self.fetched_at:
             return
-        path = aa_web.write(aa_web.REPORT_PATH, self.models, self.fetched_at, self.lb_date)
+        path = web.write(web.REPORT_PATH, self.models, self.fetched_at, self.lb_date)
         webbrowser.open(path.as_uri())
         self.notify(f"브라우저로 열었습니다: {path}")
 

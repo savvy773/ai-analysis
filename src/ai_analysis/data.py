@@ -11,7 +11,9 @@ from pathlib import Path
 
 URL = os.environ.get("AA_URL", "https://artificialanalysis.ai/leaderboards/models")
 LB_URL = os.environ.get("LB_URL", "https://livebench.ai")
-CACHE_DIR = Path(os.environ.get("AA_CACHE_DIR", Path(__file__).resolve().parent / ".cache"))
+# src/ai_analysis/data.py → 프로젝트 루트
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+CACHE_DIR = Path(os.environ.get("AA_CACHE_DIR", PROJECT_ROOT / ".cache"))
 CACHE_FILE = CACHE_DIR / "models.json"
 CACHE_TTL_HOURS = float(os.environ.get("AA_CACHE_TTL_HOURS", "6"))
 

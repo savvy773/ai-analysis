@@ -1,5 +1,5 @@
 """TUI와 표 출력이 함께 쓰는 열 정의와 색 규칙."""
-import aa_data as d
+from . import data as d
 
 # (헤더, 값 키) — 왼쪽일수록 중요
 METRICS = [("Cost", "cost"), ("Time", "time"), ("Score", "score"), ("Terminal", "tb"), ("Agentic", "agentic")]

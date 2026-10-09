@@ -4,12 +4,12 @@ from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 
-import aa_data as d
-import aa_style as st
+from . import data as d
+from . import style as st
 
 
 # 기본 저장 위치: 프로젝트 루트
-REPORT_PATH = Path(__file__).resolve().parent / "report.html"
+REPORT_PATH = d.PROJECT_ROOT / "report.html"
 
 
 def build(models: list[d.Model], fetched_at: datetime, lb_date: str | None) -> str:
