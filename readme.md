@@ -63,3 +63,7 @@ Detailed documentation is currently in Korean:
 
 - [Usage guide](docs/usage.md): controls, metric definitions, and the recommendation formula.
 - [Technical guide](docs/tech-stack.md): data sources, environment variables, and architecture.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

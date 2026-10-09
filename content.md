@@ -1,5 +1,7 @@
 # ai-analysis
 
+- `LICENSE` — MIT 라이선스
+
 - `ai_compare.py` — 루트 실행 파일(더블클릭). 의존성 없으면 uv 환경으로 재실행
 - `src/ai_analysis/cli.py` — `ai-analysis` 명령 진입점. 기본 HTML 리포트, `--print`/`--markdown`이면 터미널 표
 - `src/ai_analysis/data.py` — 수집·파싱·캐시(`load`), LiveBench 연결(`fetch_livebench`, `model_key`), 선별·정렬(`select`)

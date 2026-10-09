@@ -3,6 +3,8 @@ name = "ai-analysis"
 version = "0.1.0"
 description = "Artificial Analysis·LiveBench 데이터로 AI 모델 비용·시간·코딩 성능을 비교하는 HTML 리포트"
 requires-python = ">=3.14"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "rich==15.0.0",
 ]
