@@ -1,39 +1,65 @@
 # ai-analysis
 
-AI 모델의 비용·응답 시간·코딩 성능을 한 표로 비교한다. 데이터는 [Artificial Analysis](https://artificialanalysis.ai/leaderboards/models)와 [LiveBench](https://livebench.ai/)에서 가져오며 AI API 토큰은 쓰지 않는다.
+Compare AI models by cost, response time, and coding performance in a local browser report. Data comes from [Artificial Analysis](https://artificialanalysis.ai/leaderboards/models) and [LiveBench](https://livebench.ai/). No AI API key or token usage is required.
 
-## 화면
+## Preview
 
-![모델 비교 화면](docs/images/overview.png)
+![AI model leaderboard, favorites, comparison, and recommendations](docs/images/overview.png)
 
-최소 Intelligence·Terminal 조건을 AND로 적용하고, 최대 4개 모델을 VS로 비교한다. 하단 추천은 비용 60%·시간 40%의 상대 부담으로 계산하며, 시간 배수의 1.5승을 반영해 느린 모델의 점수를 크게 낮춘다. 비중은 조절할 수 있다. 즐겨찾기와 필터·정렬·추천 비중은 자동 저장한다. Save는 즐겨찾기까지 기본값에 포함하고 Reset은 마지막 Save 상태로 돌아간다.
+- Filter by provider, model name, and minimum Intelligence and Terminal scores. Both score thresholds must be met.
+- Sort by individual metrics or combine multiple sort criteria. Compare up to four models side by side.
+- Mark favorites and keep your filters, sorting, and recommendation weights between sessions in the same browser.
+- Use **Save** to store current settings and favorites as defaults. **Reset** restores those defaults and clears comparison selections. Both buttons provide visual feedback and a confirmation message.
+- Explore five recommendations based on relative cost and response time. The default weights are 60% cost and 40% time; adjust them with the slider. The time ratio is raised to the power of 1.5 to penalize slower models. These recommendations measure cost and time within your filters, rather than overall model quality.
 
-계산과 조작은 [사용법](docs/usage.md), 수집 경로와 데이터 흐름도는 [기술 문서](docs/tech-stack.md)를 참고한다.
+LiveBench scores appear when the model name and reasoning effort match. Missing scores are shown as a dash.
 
-## 빠른 실행
+## Quick start
 
-| 하고 싶은 것 | 방법 |
+Install [uv](https://docs.astral.sh/uv/) and clone the repository. The project requires Python 3.14 or later; uv manages the project environment. An internet connection is needed to fetch source data.
+
+```sh
+git clone https://github.com/savvy773/ai-analysis.git
+cd ai-analysis
+uv run ai_compare.py
+```
+
+The command fetches current data, updates `report.html`, and opens it in your browser. On Windows, you can also double-click `ai_compare.py` if `.py` files are associated with Python and uv is available on your PATH.
+
+To make the `ai-analysis` command available outside the project folder, run `uv tool install --editable .` from the project folder.
+
+| Task | Command |
 |---|---|
-| 그냥 보기 | 루트의 **`ai_compare.py` 더블클릭** → `report.html` 갱신 후 브라우저로 열림 |
-| 터미널 어디서나 | `ai-analysis` (위와 같음) |
-| 터미널에 표로 | `ai-analysis --print` |
+| Refresh the report and open it | `ai-analysis` |
+| Reuse cached data while valid | `ai-analysis --cached` |
+| Print a table in the terminal | `ai-analysis --print` |
+| Output a Markdown table | `ai-analysis --markdown` |
+| Filter by provider and sort by Terminal score | `ai-analysis --maker claude --sort tb` |
+| Save HTML without opening a browser | `ai-analysis --out comparison.html` |
 
-준비: [uv](https://docs.astral.sh/uv/) 설치 후, 프로젝트 폴더에서 `uv tool install --editable .` 한 번.
+The same options work with `uv run ai_compare.py`. Refreshing the browser displays the existing report; rerun the command to fetch new data. The default cache lifetime is six hours.
 
-## 폴더 구조
+## Project structure
 
 ```
 ai-analysis/
-├─ ai_compare.py            실행 파일 (더블클릭)
-├─ report.html       결과 화면 (실행할 때마다 갱신, git 제외)
-├─ docs/             문서
-│  ├─ usage.md       옵션 · 키 · 열 설명
-│  └─ tech-stack.md  기술 스택 · 코드 구조 · 데이터 흐름
-└─ src/ai_analysis/  코드
-   ├─ cli.py         명령 옵션 처리, 출력 방식 선택
-   ├─ data.py        데이터 수집 · 캐시 · 정렬
-   ├─ web.py         HTML 리포트
-   └─ style.py       열 구성 · 색 규칙
+├─ ai_compare.py       Launcher
+├─ report.html         Generated report (excluded from Git)
+├─ docs/
+│  ├─ images/          README screenshot
+│  ├─ usage.md         Options, controls, and metric definitions
+│  └─ tech-stack.md    Architecture and data flow
+├─ src/ai_analysis/
+│  ├─ cli.py          Command-line options and output modes
+│  ├─ data.py         Data collection, parsing, caching, and sorting
+│  ├─ web.py          HTML report and browser interactions
+│  └─ style.py        Columns and color rules
+└─ tests/             Data validation and launcher regression tests
 ```
 
-자세한 사용법은 [docs/usage.md](docs/usage.md).
+## Documentation
+
+Detailed documentation is currently in Korean:
+
+- [Usage guide](docs/usage.md): controls, metric definitions, and the recommendation formula.
+- [Technical guide](docs/tech-stack.md): data sources, environment variables, and architecture.
