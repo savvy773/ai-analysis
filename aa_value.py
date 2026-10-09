@@ -3,7 +3,7 @@
 USAGE = """Artificial Analysis 리더보드에서 기준 점수 이상 모델의 가성비 표를 출력한다.
 
 사용 예 (Windows는 더블클릭도 가능):
-  ./aa_value.py                    # Intelligence Index 50점 이상, 작업당 비용 순
+  ./aa_value.py                    # 점수 상위 20개, 작업당 비용 순
   ./aa_value.py --min 45 --sort time
   ./aa_value.py --filter "opus|sonnet|sol"
   ./aa_value.py --html saved.html  # 저장해 둔 페이지로 오프라인 실행
@@ -113,7 +113,7 @@ BEST = {2: ("cost", False), 3: ("time", False), 4: ("score", True), 5: ("tb", Tr
 
 def cells(i: int, r: dict) -> list[str]:
     return [
-        str(i), r["name"].replace(" with fallback", ""), f'${r["cost"]:.2f}',
+        str(i), r["name"].replace(" (with fallback)", "").replace(" with fallback", ""), f'${r["cost"]:.2f}',
         fmt(r["time"], ".0f", "s"), f'{r["score"]:.1f}',
         fmt(r["tb"] and r["tb"] * 100, ".1f", "%"),
     ]
@@ -153,10 +153,10 @@ def render_table(rows: list[dict], title: str) -> Table:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=USAGE, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--min", type=float, default=50, help="최소 Intelligence Index (기본 50)")
+    ap.add_argument("--min", type=float, default=0, help="최소 Intelligence Index (기본 제한 없음)")
     ap.add_argument("--sort", choices=SORTS, default="cost", help="정렬 기준 (기본 cost=작업당 비용)")
     ap.add_argument("--filter", help="모델명/제작사 정규식 필터 (예: 'opus|sol')")
-    ap.add_argument("--top", type=int, default=0, help="상위 N개만 출력")
+    ap.add_argument("--top", type=int, default=20, help="점수 상위 N개만 표시 (기본 20, 0=전부)")
     ap.add_argument("--html", help="URL 대신 저장된 HTML 파일 사용")
     ap.add_argument("--markdown", action="store_true", help="컬러 표 대신 마크다운 표로 출력")
     args = ap.parse_args()
@@ -173,10 +173,15 @@ def main() -> int:
         print("모델 데이터를 찾지 못했습니다. 페이지 구조가 바뀌었을 수 있습니다.", file=sys.stderr)
         return 1
 
-    rows = sorted(build_rows(models, args.min, args.filter), key=SORTS[args.sort])
+    # 점수 상위 N개를 고른 뒤, 그 안에서 정렬 기준대로 나열
+    rows = sorted(build_rows(models, args.min, args.filter), key=SORTS["score"])
     if args.top:
         rows = rows[: args.top]
-    title = f"Intelligence Index ≥ {args.min:g} · sort: {args.sort} · {len(rows)} models"
+    rows.sort(key=SORTS[args.sort])
+    scope = f"top {args.top} by score" if args.top else "all"
+    if args.min:
+        scope += f" · score ≥ {args.min:g}"
+    title = f"Intelligence Index {scope} · sort: {args.sort} · {len(rows)} models"
     if args.markdown:
         print(f"{title} (source: {URL})\n\n{render_markdown(rows)}")
     else:

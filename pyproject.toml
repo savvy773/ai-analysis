@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Artificial Analysis 리더보드에서 AI 모델 성능·비용 비교표를 출력하는 CLI"
 requires-python = ">=3.14"
 dependencies = [
-    "rich==14.1.0",
+    "rich==15.0.0",
 ]
 
 [tool.uv]

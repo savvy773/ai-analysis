@@ -16,9 +16,9 @@
 필요한 것: [uv](https://docs.astral.sh/uv/), 인터넷.
 
 ```bash
-uv run aa_value.py                  # 50점 이상, 작업당 비용 순
+uv run aa_value.py                  # 점수 상위 20개, 작업당 비용 순
 uv run aa_value.py --sort tb        # score | time | cost | tb
-uv run aa_value.py --min 45 --filter "opus|sol" --top 10
+uv run aa_value.py --top 30 --min 45 --filter "opus|sol"
 uv run aa_value.py --markdown       # 마크다운 표
 ```
 
