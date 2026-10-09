@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""실행 파일. 더블클릭하거나 `python run.py` / `uv run run.py`로 실행한다.
+"""실행 파일. 더블클릭하거나 `python ai_compare.py` / `uv run ai_compare.py`로 실행한다.
 
 의존성이 없는 Python으로 실행되면(예: Windows 더블클릭) 이 프로젝트의 uv 환경으로 다시 실행한다.
-기본으로 루트의 report.html을 갱신해 브라우저로 연다. 옵션은 `ai-analysis`와 같다 (run.py --print ...).
+기본으로 루트의 report.html을 갱신해 브라우저로 연다. 옵션은 `ai-analysis`와 같다 (ai_compare.py --print ...).
 """
 import os
 import subprocess

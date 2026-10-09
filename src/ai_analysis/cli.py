@@ -39,10 +39,10 @@ def render_table(rows: list[d.Model], title: str) -> Table:
             style, is_best = st.cell_style(k, m.get(k), tier)
             if k == "cost" and not is_best:
                 style = f"bold {style}".strip()
-            text = ("★ " if is_best else "") + v[k]
+            text = v[k]
             row.append(f"[{style}]{text}[/]" if style else text)
         table.add_row(*row)
-    table.caption = f"[{st.BEST}]★ best[/]  [{st.GOOD}]top 25%[/]  [{st.POOR}]bottom 25%[/]  · Agentic = LiveBench Agentic Coding"
+    table.caption = f"[{st.BEST}]best[/]  [{st.GOOD}]top 25%[/]  [{st.POOR}]bottom 25%[/]  · Agentic = LiveBench Agentic Coding"
     return table
 
 
@@ -71,7 +71,12 @@ def open_report(args) -> int:
     except (OSError, ValueError) as e:
         print(f"불러오지 못했습니다: {e}", file=sys.stderr)
         return 1
-    view = {"maker": args.maker, "sort": args.sort, "top": args.top, "q": args.filter or ""}
+    view = {"maker": args.maker, "sort": args.sort, "top": args.top, "q": args.filter or "",
+            "min": args.min, "terminalMin": args.min_terminal}
+    view["explicit"] = [key for flag, key in (("--maker", "maker"), ("--sort", "sort"),
+                        ("--top", "top"), ("--filter", "q"), ("--min", "min"),
+                        ("--min-terminal", "terminalMin"))
+                        if any(arg == flag or arg.startswith(flag + "=") for arg in sys.argv[1:])]
     path = web.write(Path(args.out).resolve() if args.out else web.REPORT_PATH, models, fetched_at, lb_date, view)
     print(f"HTML 리포트: {path}")
     if not args.out:
@@ -84,14 +89,18 @@ def main() -> int:
     ap.add_argument("--maker", choices=d.MAKERS, default="all", help="처음 보일 제조사 탭 (기본 all)")
     ap.add_argument("--sort", choices=d.SORTS, default="cost", help="정렬 기준 (기본 cost=작업당 비용)")
     ap.add_argument("--top", type=int, default=20, help="점수 상위 N개만 표시 (기본 20, 0=전부)")
-    ap.add_argument("--min", type=float, default=0, help="최소 Intelligence Index (기본 제한 없음)")
+    ap.add_argument("--min", type=float, choices=[0, 40, 50, 60], default=40.0, help="Minimum Score (default 40; 0=Any)")
+    ap.add_argument("--min-terminal", type=float, choices=[0, 40, 50, 60], default=0.0, help="Minimum Terminal percentage, AND with --min (default 0)")
     ap.add_argument("--filter", help="모델명/제작사 정규식 필터 (예: 'opus|sol')")
-    ap.add_argument("--refresh", action="store_true", help="캐시를 무시하고 새로 받기")
+    ap.add_argument("--refresh", action="store_true", default=True, help="Fetch current source data (default)")
+    ap.add_argument("--cached", dest="refresh", action="store_false", help="Use cached data while valid")
     ap.add_argument("--from-html", dest="html", help="URL 대신 저장된 Artificial Analysis 페이지 사용")
     ap.add_argument("--out", help="HTML 리포트 저장 경로 (기본 프로젝트 루트의 report.html, 지정하면 브라우저를 열지 않음)")
     ap.add_argument("--print", action="store_true", help="브라우저 대신 터미널에 표 출력")
     ap.add_argument("--markdown", action="store_true", help="마크다운 표로 출력")
     args = ap.parse_args()
+    if not (0 <= args.min < float("inf")) or not (0 <= args.min_terminal <= 100):
+        ap.error("Minimum Score must be non-negative and finite; Terminal must be between 0 and 100.")
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
 
     if not (args.print or args.markdown):
@@ -102,10 +111,13 @@ def main() -> int:
     except (OSError, ValueError) as e:
         print(f"불러오지 못했습니다: {e}", file=sys.stderr)
         return 1
-    rows = d.select(models, args.maker, args.top, args.min, args.filter, args.sort)
+    rows = d.select(models, args.maker, args.top, args.min, args.filter, args.sort,
+                    min_terminal=args.min_terminal)
     scope = f"top {args.top}" if args.top else "all"
     if args.min:
-        scope += f" · score ≥ {args.min:g}"
+        scope += f" · score ≥ {args.min:.1f}"
+    if args.min_terminal:
+        scope += f" · Terminal ≥ {args.min_terminal:.1f}%"
     title = f"{d.MAKERS[args.maker][0]} · {scope} by score · sort: {args.sort} · {len(rows)} models"
     print_table(args, rows, title)
     return 0

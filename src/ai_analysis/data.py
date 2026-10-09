@@ -171,12 +171,14 @@ def matches_maker(m: Model, maker: str) -> bool:
 
 
 def select(models: list[Model], maker: str = "all", top: int = 20, min_score: float = 0,
-           pattern: str | None = None, sort: str = "cost", reverse: bool = False) -> list[Model]:
+           pattern: str | None = None, sort: str = "cost", reverse: bool = False,
+           min_terminal: float = 0) -> list[Model]:
     """제조사·검색어로 거른 뒤 점수 상위 top개를 골라 sort 기준으로 나열한다."""
     rx = re.compile(pattern, re.I) if pattern else None
     rows = [
         m for m in models
         if m.score >= min_score and matches_maker(m, maker)
+        and (min_terminal <= 0 or (m.tb is not None and m.tb * 100 >= min_terminal))
         and (not rx or rx.search(f"{m.name} {m.creator}"))
     ]
     rows.sort(key=lambda m: -m.score)
@@ -195,8 +197,8 @@ def fmt(v, spec: str, suffix: str = "", prefix: str = "") -> str:
 
 def cells(m: Model) -> dict[str, str]:
     return {
-        "cost": fmt(m.cost, ".2f", prefix="$"),
-        "time": fmt(m.time, ".0f", "s"),
+        "cost": fmt(m.cost, ".1f", prefix="$"),
+        "time": fmt(m.time, ".1f", "s"),
         "score": fmt(m.score, ".1f"),
         "tb": fmt(m.tb and m.tb * 100, ".1f", "%"),
         "agentic": fmt(m.agentic, ".1f"),
