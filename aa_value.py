@@ -104,18 +104,18 @@ def fmt(v, spec: str, suffix: str = "") -> str:
     return "-" if v is None else f"{v:{spec}}{suffix}"
 
 
-HEAD = ["순위", "조합", "점수", "Terminal-Bench", "총 응답 시간", "작업당 비용"]
+HEAD = ["순위", "조합", "작업당 비용", "총 응답 시간", "점수", "터미널"]
 # 모델명 접두어 → 색 (그 외 모델은 기본색)
 MODEL_STYLE = {"gpt": "#10a37f", "claude": "#d97757"}
 # 열 인덱스 → (값 키, 높을수록 좋은가): 열마다 최고 값을 강조
-BEST = {2: ("score", True), 3: ("tb", True), 4: ("time", False), 5: ("cost", False)}
+BEST = {2: ("cost", False), 3: ("time", False), 4: ("score", True), 5: ("tb", True)}
 
 
 def cells(i: int, r: dict) -> list[str]:
     return [
-        str(i), r["name"].replace(" with fallback", ""), f'{r["score"]:.1f}',
+        str(i), r["name"].replace(" with fallback", ""), f'${r["cost"]:.2f}',
+        fmt(r["time"], ".0f", "s"), f'{r["score"]:.1f}',
         fmt(r["tb"] and r["tb"] * 100, ".1f", "%"),
-        fmt(r["time"], ".0f", "s"), f'${r["cost"]:.2f}',
     ]
 
 
@@ -138,7 +138,7 @@ def render_table(rows: list[dict], title: str) -> Table:
     table = Table(title=title, box=box.ROUNDED, header_style="bold cyan", row_styles=["", "on grey11"])
     for c, h in enumerate(HEAD):
         table.add_column(h, justify="left" if c == 1 else "right", no_wrap=True,
-                         style="bold" if c == len(HEAD) - 1 else None)
+                         style="bold" if c == 2 else None)  # 작업당 비용 강조
     for i, r in enumerate(rows, 1):
         row = cells(i, r)
         if style := model_style(row[1]):
