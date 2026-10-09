@@ -7,6 +7,7 @@ USAGE = """Artificial Analysis 리더보드로 AI 모델의 비용·시간·성�
   ./aa_value.py --maker claude       # 제조사 탭을 골라서 시작
   ./aa_value.py --print --maker google --top 10
   ./aa_value.py --markdown --sort tb
+  ./aa_value.py --web                # HTML 리포트를 만들어 브라우저로 연다
 """
 import argparse
 import os
@@ -93,6 +94,24 @@ def print_table(args, rows: list[d.Model], title: str) -> None:
     console.print(f"[dim]source: {d.URL}[/]")
 
 
+def open_report(args) -> int:
+    import webbrowser
+    from pathlib import Path
+
+    import aa_web
+
+    try:
+        models, fetched_at, lb_date = d.load(args.html, refresh=args.refresh)
+    except (OSError, ValueError) as e:
+        print(f"불러오지 못했습니다: {e}", file=sys.stderr)
+        return 1
+    path = aa_web.write(Path(args.out or d.CACHE_DIR / "report.html").resolve(), models, fetched_at, lb_date)
+    print(f"HTML 리포트: {path}")
+    if not args.out:
+        webbrowser.open(path.as_uri())
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=USAGE, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--maker", choices=d.MAKERS, default="all", help="제조사 (기본 all)")
@@ -101,11 +120,16 @@ def main() -> int:
     ap.add_argument("--min", type=float, default=0, help="최소 Intelligence Index (기본 제한 없음)")
     ap.add_argument("--filter", help="모델명/제작사 정규식 필터 (예: 'opus|sol')")
     ap.add_argument("--refresh", action="store_true", help="캐시를 무시하고 새로 받기")
-    ap.add_argument("--html", help="URL 대신 저장된 HTML 파일 사용")
+    ap.add_argument("--from-html", dest="html", help="URL 대신 저장된 Artificial Analysis 페이지 사용")
+    ap.add_argument("--web", action="store_true", help="HTML 리포트를 만들어 브라우저로 열기")
+    ap.add_argument("--out", help="HTML 리포트 저장 경로 (기본 .cache/report.html, 지정하면 브라우저를 열지 않음)")
     ap.add_argument("--print", action="store_true", help="TUI 대신 표만 출력")
     ap.add_argument("--markdown", action="store_true", help="마크다운 표로 출력")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+
+    if args.web or args.out:
+        return open_report(args)
 
     if not (args.print or args.markdown) and sys.stdout.isatty():
         import aa_tui

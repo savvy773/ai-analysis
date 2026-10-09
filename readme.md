@@ -22,6 +22,7 @@ uv run aa_value.py                         # 대화형 화면 (TUI)
 uv run aa_value.py --maker claude          # 제조사 탭을 골라 시작
 uv run aa_value.py --print --top 10        # 표만 출력
 uv run aa_value.py --markdown --sort agentic
+uv run aa_value.py --web                   # HTML 리포트를 만들어 브라우저로 열기
 uv run aa_value.py --refresh               # 캐시 무시하고 새로 받기
 ```
 
@@ -34,8 +35,10 @@ TUI 키
 | `+` `-` / `a` | 표시 개수 ±5 / 점수 상위 20 ↔ 전체 |
 | `/`, `Esc` | 모델명 검색(정규식), 검색 지우기 |
 | `m` | 현재 표를 마크다운으로 클립보드 복사 |
+| `w` | HTML 리포트를 브라우저로 열기 |
 | `r` / `q` | 새로고침 / 종료 |
 
+- 어디서나 `ai-analysis` 명령으로 실행: 프로젝트 폴더에서 `uv tool install --editable .` 한 번.
 - Windows: `aa_value.py` 더블클릭으로도 실행된다.
 - Linux: `./aa_value.py` (`chmod +x` 한 번).
 - `python aa_value.py`로 실행해도 스스로 `uv run`으로 다시 실행한다.

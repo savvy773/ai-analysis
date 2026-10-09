@@ -43,6 +43,7 @@ class LeaderboardApp(App):
         Binding("a", "toggle_all", "Top/All"),
         Binding("slash", "search", "Search"),
         Binding("m", "copy_markdown", "Copy MD"),
+        Binding("w", "web", "HTML"),
         Binding("r", "refresh", "Refresh"),
         Binding("escape", "clear_search", "Clear", show=False),
         Binding("q", "quit", "Quit"),
@@ -193,6 +194,17 @@ class LeaderboardApp(App):
         search = self.query_one("#search", Input)
         search.value = ""
         self.query_one(DataTable).focus()
+
+    def action_web(self) -> None:
+        import webbrowser
+
+        import aa_web
+
+        if not self.models or not self.fetched_at:
+            return
+        path = aa_web.write((d.CACHE_DIR / "report.html").resolve(), self.models, self.fetched_at, self.lb_date)
+        webbrowser.open(path.as_uri())
+        self.notify(f"브라우저로 열었습니다: {path}")
 
     def action_refresh(self) -> None:
         self.load(refresh=True)

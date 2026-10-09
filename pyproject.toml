@@ -8,5 +8,12 @@ dependencies = [
     "textual==8.2.8",
 ]
 
-[tool.uv]
-package = false
+[project.scripts]
+ai-analysis = "aa_value:main"
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["aa_value", "aa_data", "aa_style", "aa_tui", "aa_web"]
