@@ -95,10 +95,11 @@ input, select { font: inherit; color: var(--text); background: var(--panel); bor
   border-radius: 8px; padding: 6px 10px; }
 input { flex: 1; min-width: 160px; }
 #q { flex: 0 1 180px; width: 180px; min-width: 140px; }
-.filter-controls { display: flex; align-items: flex-end; gap: 10px; }
+.filter-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
 .score-filter { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 80px; }
 .score-filter > label { color: var(--muted); font-size: 11px; line-height: 14px; text-align: center; white-space: nowrap; }
 .toolbar-top .score-filter select { width: 80px; min-width: 80px; height: 26px; text-align: center; padding: 2px 6px; }
+.toolbar-top #reset-scores { width: 24px; height: 24px; padding: 0; border-radius: 5px; font-size: 16px; line-height: 1; }
 .quiet-button { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px;
   font: inherit; color: var(--text); background: var(--panel); cursor: pointer; }
 .quiet-button:hover { background: var(--row-hover); border-color: var(--accent); }
@@ -262,6 +263,7 @@ a { color: var(--accent); }
       <label for="min-terminal" title="Minimum Terminal (%); Any = no limit.">Terminal</label>
       <select id="min-terminal" title="Minimum Terminal (%); Any = no limit."></select>
     </div>
+    <button class="quiet-button reset-button" id="reset-scores" type="button" aria-label="Reset Intelligence and Terminal to Any" title="Set Intelligence and Terminal to Any.">↺</button>
     </div>
     <div class="sort-settings">
       <label class="toggle" title="Sort by multiple columns; ties use displayed values."><input id="multi-sort" type="checkbox" role="switch">Multi-sort</label>
@@ -687,6 +689,12 @@ for (const [name, key] of [["score", "min"], ["terminal", "terminalMin"]]) {
     state[key] = Number(select.value); state.sel = null; render();
   });
 }
+$("reset-scores").addEventListener("click", () => {
+  state.min = 0; state.terminalMin = 0; state.sel = null;
+  $("min-score").value = "0"; $("min-terminal").value = "0";
+  render();
+  settingsFeedback("reset-scores", "Intelligence and Terminal set to Any");
+});
 $("reset-filters").addEventListener("click", () => {
   Object.assign(state, { maker: "all", top: 20, q: "", min: 40, terminalMin: 0, sort: "cost", desc: false, sel: null, compare: [], multi: false, sortKeys: [{ key: "cost", desc: false }], costWeight: 60 });
   let defaults = null;
