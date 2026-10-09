@@ -180,16 +180,21 @@ def load(html_path: str | None = None, refresh: bool = False) -> tuple[list[Mode
     raw = parse(Path(html_path).read_text(encoding="utf-8") if html_path else fetch())
     if not raw:
         raise ValueError("모델 데이터를 찾지 못했습니다. 페이지 구조가 바뀌었을 수 있습니다.")
+    models = to_models(raw)
+    if not models:
+        raise ValueError("유효한 모델이 없습니다. 점수·비용 데이터 형식을 확인하세요.")
     try:
         livebench, lb_date = fetch_livebench()
     except (OSError, ValueError, KeyError, TypeError, AttributeError, csv.Error):
         livebench, lb_date = {}, None  # LiveBench가 없어도 나머지 열은 보여 준다
+    if livebench:
+        models = to_models(raw, livebench)
     fetched_at = datetime.now(timezone.utc)
     if not html_path:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         CACHE_FILE.write_text(json.dumps({"fetched_at": fetched_at.isoformat(), "models": raw,
                                           "livebench": livebench, "livebench_date": lb_date}), encoding="utf-8")
-    return to_models(raw, livebench), fetched_at, lb_date
+    return models, fetched_at, lb_date
 
 
 def matches_maker(m: Model, maker: str) -> bool:

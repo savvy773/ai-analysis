@@ -1,11 +1,23 @@
 """공개 페이지의 Next.js 누락 값 때문에 표 생성이 중단된 오류의 회귀 검사."""
 import math
 import unittest
+from unittest.mock import patch
 
 from ai_analysis import data as d
 
 
 class SourceNumbersTest(unittest.TestCase):
+    def test_empty_conversion_does_not_replace_cache_or_fetch_livebench(self):
+        raw = [{"slug": "invalid", "intelligenceIndex": 45, "intelligenceIndexCostPerTask": "$undefined"}]
+        with (patch.object(d, "fetch", return_value="source"),
+              patch.object(d, "parse", return_value=raw),
+              patch.object(d, "fetch_livebench") as livebench,
+              patch.object(d.Path, "write_text") as write):
+            with self.assertRaisesRegex(ValueError, "유효한 모델이 없습니다"):
+                d.load(refresh=True)
+        livebench.assert_not_called()
+        write.assert_not_called()
+
     def test_nextjs_missing_values_do_not_break_model_conversion(self):
         html = (
             r'{\"slug\":\"missing-cost\",\"intelligenceIndex\":45,\"intelligenceIndexCostPerTask\":\"$undefined\"}'

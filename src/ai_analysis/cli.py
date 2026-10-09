@@ -78,7 +78,12 @@ def open_report(args) -> int:
                         ("--top", "top"), ("--filter", "q"), ("--min", "min"),
                         ("--min-terminal", "terminalMin"))
                         if any(arg == flag or arg.startswith(flag + "=") for arg in sys.argv[1:])]
-    path = web.write(Path(args.out).resolve() if args.out else web.REPORT_PATH, models, fetched_at, lb_date, view)
+    path = Path(args.out).resolve() if args.out else web.REPORT_PATH
+    try:
+        web.write(path, models, fetched_at, lb_date, view)
+    except OSError as e:
+        print(f"리포트를 저장하지 못했습니다 ({path}): {e}", file=sys.stderr)
+        return 1
     print(f"HTML 리포트: {path}")
     if not args.out:
         webbrowser.open(path.as_uri())

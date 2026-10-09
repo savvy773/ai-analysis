@@ -108,6 +108,12 @@ input { flex: 1; min-width: 160px; }
 .settings-toast { position: fixed; bottom: 16px; right: 16px; z-index: 5; padding: 9px 14px;
   border: 1px solid var(--line); border-radius: 8px; color: var(--text); background: var(--panel); }
 .settings-toast:empty { display: none; }
+.quiet-button.feedback-success { color: var(--best); background: var(--best-bg);
+  border-color: var(--best); box-shadow: 0 0 0 3px color-mix(in srgb, var(--best) 18%, transparent);
+  animation: settings-feedback .22s ease-out; }
+.quiet-button.feedback-error, .settings-toast.feedback-error { border-color: #e57373; color: #c44343; }
+@keyframes settings-feedback { from { transform: scale(.94); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .quiet-button.feedback-success { animation: none; } }
 @media (prefers-color-scheme: dark) {
   .reset-button { color: #efc17b; background: #3b3025; border-color: #705537; }
   .reset-button:hover { background: #4a3928; border-color: #b48a54; }
@@ -702,15 +708,30 @@ $("reset-filters").addEventListener("click", () => {
   }
   $("q").value = state.q;
   renderTabs(); render();
+  settingsFeedback("reset-filters", "Defaults restored · VS cleared");
 });
 let settingsNotice;
+const feedbackTimers = new Map();
+function settingsFeedback(buttonId, message, failed = false) {
+  const button = $(buttonId), status = $("settings-status");
+  clearTimeout(feedbackTimers.get(buttonId));
+  button.classList.remove("feedback-success", "feedback-error");
+  void button.offsetWidth;
+  button.classList.add(failed ? "feedback-error" : "feedback-success");
+  feedbackTimers.set(buttonId, setTimeout(() => {
+    button.classList.remove("feedback-success", "feedback-error");
+    feedbackTimers.delete(buttonId);
+  }, 1300));
+  status.classList.toggle("feedback-error", failed);
+  status.textContent = message;
+  clearTimeout(settingsNotice);
+  settingsNotice = setTimeout(() => { status.textContent = ""; }, 3000);
+}
 $("save-defaults").addEventListener("click", () => {
   try {
     localStorage.setItem(DEFAULT_KEY, JSON.stringify({ ...settingsSnapshot(), favorites: [...favorites], compare: [] }));
-    $("settings-status").textContent = "Defaults saved";
-  } catch { $("settings-status").textContent = "Could not save defaults in this browser."; }
-  clearTimeout(settingsNotice);
-  settingsNotice = setTimeout(() => { $("settings-status").textContent = ""; }, 3000);
+    settingsFeedback("save-defaults", "Defaults saved");
+  } catch { settingsFeedback("save-defaults", "Could not save defaults in this browser.", true); }
 });
 
 $("sub").innerHTML = `Collected ${D.fetched} · <a href="${D.sources.aa}" target="_blank" rel="noopener noreferrer">Artificial Analysis</a>` +
