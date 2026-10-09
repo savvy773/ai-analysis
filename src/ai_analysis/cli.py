@@ -1,5 +1,6 @@
 """명령행 진입점: 기본은 HTML 리포트를 갱신해 브라우저로 열고, --print/--markdown이면 터미널에 표를 출력한다."""
 import argparse
+import re
 import sys
 
 from rich import box
@@ -99,6 +100,13 @@ def main() -> int:
     ap.add_argument("--print", action="store_true", help="브라우저 대신 터미널에 표 출력")
     ap.add_argument("--markdown", action="store_true", help="마크다운 표로 출력")
     args = ap.parse_args()
+    if args.top < 0:
+        ap.error("Top must be non-negative; use 0 for all models.")
+    if args.filter:
+        try:
+            re.compile(args.filter, re.I)
+        except re.error as e:
+            ap.error(f"검색 정규식이 올바르지 않습니다: {e}")
     if not (0 <= args.min < float("inf")) or not (0 <= args.min_terminal <= 100):
         ap.error("Minimum Intelligence must be non-negative and finite; Terminal must be between 0 and 100.")
     sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]

@@ -40,7 +40,7 @@ ai-analysis --markdown --sort agentic     # 마크다운 표 출력
 | Top 선택 | 점수 상위 10 / 20 / 40 / 전체 |
 | 기본 표 높이 | 20개 행을 내부 세로 스크롤 없이 표시. Top 40 또는 All에서는 표 내부 스크롤 사용 |
 | 검색창 | 모델명 검색(정규식, 예: `opus\|sol`) |
-| Minimum: Intelligence / Terminal % | 공통 선택지 Any · 40 · 50 · 60. Any는 해당 제한만 해제 |
+| Minimum: Intelligence / Terminal | 공통 선택지 Any · 40 · 50 · 60. Any는 해당 제한만 해제 |
 | VS 체크 칸 | 최대 4개 선택. 두 개 이상이면 비교표가 나타나며 우위 값은 초록으로 강조 |
 | Clear | 비교 선택만 초기화 |
 | Save | 현재 필터·검색·정렬을 Reset의 기본값으로 저장. VS 선택은 기본값에 포함하지 않음 |

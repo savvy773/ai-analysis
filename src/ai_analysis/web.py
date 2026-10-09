@@ -232,7 +232,7 @@ a { color: var(--accent); }
       <select id="min-score" title="Minimum Intelligence Index"></select>
     </div>
     <div class="score-filter">
-      <label for="min-terminal">Terminal %</label>
+      <label for="min-terminal">Terminal</label>
       <select id="min-terminal" title="Minimum Terminal-Bench percentage"></select>
     </div>
     <div class="sort-settings"><span id="sort-order"></span>

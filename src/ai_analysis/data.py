@@ -90,7 +90,17 @@ def fetch_livebench() -> tuple[dict[str, dict], str]:
         except OSError:
             continue  # 표가 없는 날짜(모델 출시일 등)
         scores = {}
-        for row in csv.DictReader(io.StringIO(table)):
+        reader = csv.DictReader(io.StringIO(table))
+        if not reader.fieldnames or "model" not in reader.fieldnames:
+            raise ValueError("LiveBench CSV에 model 열이 없습니다.")
+        if not isinstance(categories, dict) or any(
+            not isinstance(tasks, list) or any(not isinstance(task, str) for task in tasks)
+            for tasks in categories.values()
+        ):
+            raise ValueError("LiveBench 카테고리 형식이 올바르지 않습니다.")
+        for row in reader:
+            if not row.get("model"):
+                raise ValueError("LiveBench CSV에 모델명이 없는 행이 있습니다.")
             def avg(cat: str) -> float | None:
                 vals = [float(row[t]) for t in categories.get(cat, []) if row.get(t)]
                 return sum(vals) / len(vals) if vals else None
@@ -143,16 +153,22 @@ def to_models(raw: list[dict], livebench: dict[str, dict] | None = None) -> list
 def load(html_path: str | None = None, refresh: bool = False) -> tuple[list[Model], datetime, str | None]:
     """(모델 목록, 수집 시각 UTC, LiveBench 표 날짜). 캐시가 TTL 안이면 쓰고, 아니거나 refresh면 새로 받는다."""
     if not html_path and not refresh and CACHE_FILE.exists():
-        data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-        fetched_at = datetime.fromisoformat(data["fetched_at"])
-        if (datetime.now(timezone.utc) - fetched_at).total_seconds() < CACHE_TTL_HOURS * 3600:
-            return to_models(data["models"], data.get("livebench")), fetched_at, data.get("livebench_date")
+        try:
+            data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+            fetched_at = datetime.fromisoformat(data["fetched_at"])
+            age = (datetime.now(timezone.utc) - fetched_at).total_seconds()
+            if 0 <= age < CACHE_TTL_HOURS * 3600:
+                models = to_models(data["models"], data.get("livebench"))
+                if models:
+                    return models, fetched_at, data.get("livebench_date")
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            pass  # 읽을 수 없거나 손상된 캐시는 새로 수집해 복구한다.
     raw = parse(Path(html_path).read_text(encoding="utf-8") if html_path else fetch())
     if not raw:
         raise ValueError("모델 데이터를 찾지 못했습니다. 페이지 구조가 바뀌었을 수 있습니다.")
     try:
         livebench, lb_date = fetch_livebench()
-    except (OSError, ValueError, AttributeError):
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, csv.Error):
         livebench, lb_date = {}, None  # LiveBench가 없어도 나머지 열은 보여 준다
     fetched_at = datetime.now(timezone.utc)
     if not html_path:
